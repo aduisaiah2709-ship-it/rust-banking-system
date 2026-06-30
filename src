@@ -254,7 +254,7 @@ fn main() {
         }
 
         5 => {
-            print!("Enter accoune number: ");
+            print!("Enter account number: ");
             io::stdout().flush().unwrap();
 
             let mut acc_num = String::new();
@@ -263,7 +263,7 @@ fn main() {
             let acc_num: u64 = acc_num.trim().parse().unwrap();
 
             match bank.get_balance(acc_num) {
-                Ok(balance) => println!("current balance"),
+                Ok(balance) => println!("current balance {}", balance),
                 Err(err) => println!("{}", err),
             }
         }
