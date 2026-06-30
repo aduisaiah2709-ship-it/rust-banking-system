@@ -1,0 +1,298 @@
+
+use::std::collections::HashMap;
+
+#[derive(Debug)]
+ 
+pub struct Account {
+    pub account_number: u64,
+    pub account_name: String,
+    pub account_balance: f64,
+}   
+
+pub struct Bank {
+    pub accounts: HashMap<u64, Account>,
+}
+
+impl Bank {
+    pub fn new() -> Self {
+        Bank {
+            accounts: HashMap::new(),
+        }
+    }
+
+    pub fn create_account(&mut self, acc_num: u64, name: String, initial_deposit: f64) -> Result<(), String>{
+        if self.accounts.contains_key(&acc_num) {
+            return Err(format!("Account name {} exits", acc_num));
+        }
+
+        let new_account = Account {
+            account_number: acc_num,
+            account_name: name,
+            account_balance: initial_deposit,
+        };
+
+        self.accounts.insert(acc_num, new_account);
+
+        return Ok(());
+
+
+    }
+
+    pub fn deposit(&mut self, acc_num: u64, amount:f64) -> Result<(), String>  {
+        if amount<= 0.0 {
+            return Err("Amount must be positive.".to_string());
+
+            }
+            match self.accounts.get_mut(&acc_num) {
+                Some(account) => {
+                    account.account_balance += amount;
+                    Ok(())
+                },
+                None =>  Err("Account is not found".to_string()),
+                
+        }
+        
+    }
+
+    pub fn withdraw(&mut self, acc_num:u64, amount:f64) -> Result<(), String> {
+        if amount<= 0.0{
+            return Err("Amount must be positive.".to_string());
+        }
+        match self.accounts.get_mut(&acc_num) {
+            Some(account) => {
+                if account.account_balance >= amount{
+                    account.account_balance -= amount;
+                    Ok(())
+                }else{
+                    Err("insufficient funds.".to_string())
+                }
+  
+            },
+            None => Err("Account not found.".to_string()),
+
+            
+        }
+    }
+
+    pub fn transfer(&mut self, from_acc:u64, to_acc:u64, amount:f64) -> Result<(), String> {
+        if from_acc == to_acc {
+            return Err("cannot transfer to same account.".to_string());
+        }
+        if amount <= 0.0{
+            return Err("Amount must be positive!!!".to_string());
+        }
+        let sender_balance = self.accounts
+            .get(&from_acc)
+            .map(|account| account.account_balance)
+            .ok_or_else(|| "Account not found.".to_string())?;
+
+        if sender_balance < amount {
+            return Err("insufficient funds!!!".to_string());  
+        }
+
+        if !self.accounts.contains_key(&to_acc) {
+            return Err("account does not exist.".to_string());
+        }
+
+        if let Some(sender) = self.accounts.get_mut(&from_acc) {
+            sender.account_balance -= amount;
+        }
+        if let Some(receiver) = self.accounts.get_mut(&to_acc) {
+            receiver.account_balance += amount;
+        }
+        Ok(())    
+    }
+
+    pub fn get_balance(&self, acc_num: u64) -> Result<f64, String> {
+        self.accounts
+            .get(&acc_num)
+            .map(|account| account.account_balance)
+            .ok_or_else(|| "Account not found.".to_string())
+    }
+
+    pub fn list_accounts(&self) {
+        for(acc_num, account) in &self.accounts {
+            println!("Accounts details are {}, {}, {}",acc_num ,account.account_name,account.account_balance);
+        }
+    }
+
+    pub fn delete_account(&mut self, acc_num:u64) -> Result<(), String> {
+        match self.accounts.remove(&acc_num) {
+            Some(_) => Ok(()),
+            None => Err("Account not found.".to_string()),
+        }
+    }
+}
+
+use std::io;
+use std::io::Write;
+fn main() {
+    let mut bank = Bank::new();
+    loop{
+        println!("-----WELCOME TO JOYOUS BANK 😁 WHERE YOUR FUNDS ARE MADE HAPPY----");
+        println!("1.create Account");
+        println!("2.Deposit");
+        println!("3.withdraw");
+        println!("4.Transfer");
+        println!("5.check balance");
+        println!("6.List accounts");
+        println!("7.Delete account");
+        println!("8.Exit");
+
+        print!("what are you hoping todo today? ");
+        io::stdout().flush().unwrap();
+
+        let mut choice = String::new();
+        io::stdin().read_line(&mut choice). unwrap();
+
+        let choice: u32 = choice.trim().parse().unwrap_or(0);
+
+        match choice {
+            1 => {
+                print!("Enter account number: ");
+                io::stdout().flush().unwrap();
+
+                let mut acc_num = String::new();
+                io::stdin().read_line(&mut acc_num).unwrap();
+
+                let acc_num:u64 = acc_num.trim().parse().unwrap();
+
+                print!("Enter account name: ");
+                io::stdout().flush().unwrap();
+                let mut name = String::new();
+                io::stdin().read_line(&mut name).unwrap();
+
+                let name = name.trim().to_string();
+
+                print!("Enter initial deposit: ");
+                io::stdout().flush().unwrap();
+
+                let mut deposit = String::new();
+                io::stdin().read_line(&mut deposit).unwrap();
+
+                let deposit: f64 = deposit.trim().parse().unwrap();
+
+                match bank.create_account(acc_num, name, deposit) {
+                    Ok(()) => println!("account created sucessfully!!!"),
+                    Err(err) => println!("{}", err),
+                    
+                }
+
+            }
+
+            2 => {
+                print!("Enter account number: ");
+                io::stdout().flush().unwrap();
+
+                let mut acc_num = String::new();
+                io::stdin().read_line(&mut acc_num).unwrap();
+
+                let acc_num:u64 = acc_num.trim().parse().unwrap();
+
+                print!("Enter amount: ");
+                io::stdout().flush().unwrap();
+
+                let mut amount = String::new();
+                io::stdin().read_line(&mut amount).unwrap();
+                let amount: f64 = amount.trim().parse().unwrap();
+
+                match bank.deposit(acc_num, amount) {
+                    Ok(()) => println!("Deposit sucessful."),
+                    Err(err) => println!("{}", err),
+                }
+
+                }
+            3 =>  {
+                print!("Enter account number: ");
+                io::stdout().flush().unwrap();
+
+                let mut acc_num = String::new();
+                io::stdin().read_line(&mut acc_num).unwrap();
+
+                let acc_num:u64 = acc_num.trim().parse().unwrap();
+
+                print!("Enter amount to withdraw: ");
+                io::stdout().flush().unwrap();
+
+                let mut amount = String::new();
+                io::stdin().read_line(&mut amount).unwrap();
+                let amount: f64 = amount.trim().parse().unwrap();
+
+                match bank.deposit(acc_num, amount) {
+                    Ok(()) => println!("withdraw sucessful."),
+                    Err(err) => println!("{}", err),    
+            }
+             
+        }
+
+        4 => {
+            println!("Enter sender account number: ");
+            io::stdout().flush().unwrap();
+            let mut from_acc = String::new();
+            io::stdin().read_line(&mut from_acc).unwrap();
+            let from_acc: u64 = from_acc.trim().parse().unwrap();
+
+            println!("Enter receiver account number: ");
+            io::stdout().flush().unwrap();
+
+            let mut to_acc = String::new();
+            io::stdin().read_line(&mut to_acc).unwrap();
+
+            let to_acc: u64 = to_acc.trim().parse().unwrap();
+
+            print!("Enter amount to transfer: ");
+            io::stdout().flush().unwrap();
+
+            let mut amount = String::new();
+            io::stdin().read_line(&mut amount).unwrap();
+            let amount:f64 = amount.trim().parse().unwrap();
+
+            match bank.transfer(from_acc, to_acc, amount) {
+                Ok(()) => println!("Transfer sucessful."),
+                Err(err) => println!("{}", err),
+            }
+        }
+
+        5 => {
+            print!("Enter accoune number: ");
+            io::stdout().flush().unwrap();
+
+            let mut acc_num = String::new();
+            io::stdin().read_line(&mut acc_num).unwrap();
+
+            let acc_num: u64 = acc_num.trim().parse().unwrap();
+
+            match bank.get_balance(acc_num) {
+                Ok(balance) => println!("current balance"),
+                Err(err) => println!("{}", err),
+            }
+        }
+
+        6 => {
+            bank.list_accounts();
+        }
+
+        7 => {
+            print!{"Enter account number to delete: "};
+            io::stdout().flush().unwrap();
+
+            let mut acc_num = String::new();
+            io::stdin().read_line(&mut acc_num).unwrap();
+
+            let acc_num: u64 = acc_num.trim().parse().unwrap();
+
+            match bank.delete_account(acc_num) {
+                Ok(()) => println!("Account sucessfully deleted."),
+                Err(err) => println!("{}", err),
+            }
+        }
+
+        
+        _=> println!("invalid operation."),
+
+
+    }
+}
+
+
+}
