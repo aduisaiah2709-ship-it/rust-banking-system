@@ -139,7 +139,7 @@ fn main() {
         println!("7.Delete account");
         println!("8.Exit");
 
-        print!("what are you hoping todo today? ");
+        print!("what are you hoping to do today? ");
         io::stdout().flush().unwrap();
 
         let mut choice = String::new();
@@ -218,7 +218,7 @@ fn main() {
                 io::stdin().read_line(&mut amount).unwrap();
                 let amount: f64 = amount.trim().parse().unwrap();
 
-                match bank.deposit(acc_num, amount) {
+                match bank.withdraw(acc_num, amount) {
                     Ok(()) => println!("withdraw sucessful."),
                     Err(err) => println!("{}", err),    
             }
